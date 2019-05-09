@@ -1,0 +1,18 @@
+@startuml
+
+actor Publisher
+actor ConfirmingQueue
+actor Consumer
+
+Publisher -> ConfirmingQueue: message 1
+ConfirmingQueue -> Consumer: message 1
+Publisher -> ConfirmingQueue: message 2
+
+... Consumer processing of message 1 ...
+ConfirmingQueue <- Consumer: message 1/finished
+ConfirmingQueue -> Consumer: message 2
+
+... Consumer processing of message 2 ...
+ConfirmingQueue <- Consumer: message 2/finished
+
+@enduml
