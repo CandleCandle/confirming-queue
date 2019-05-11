@@ -3,38 +3,38 @@ use "collections"
 
 
 // transactional dispatch of queue elements.
-actor ConfirmingQueue
+actor ConfirmingQueue[T: Any #send]
 	var in_progress: Bool = false
-	let queue: List[String] = List[String]
+	let queue: List[T] = List[T]
 
-	let cb: {(String, Promise[Bool])} iso
+	let cb: {(T, Promise[Bool])} iso
 
-	new create(cb': {(String, Promise[Bool])} iso) =>
-        """
-        This callback is called for every entry in the queue, in order
-        of the entries arrival. When all processing of of the
-        entry has been done, then the supplied Promise must be fulfilled.
-        """
+	new create(cb': {(T, Promise[Bool])} iso) =>
+		"""
+		This callback is called for every entry in the queue, in order
+		of the entries arrival. When all processing of of the
+		entry has been done, then the supplied Promise must be fulfilled.
+		"""
 		cb = consume cb'
 
-	be publish(s: String) =>
-        """
-        Add an element to the queue
-        """
-		queue.push(s)
+	be publish(s: T) =>
+		"""
+		Add an element to the queue
+		"""
+		queue.push(consume s)
 		_dispatch()
 
 	be _complete() =>
-        """
-        Mark the currently processing entry as complete.
-        """
+		"""
+		Mark the currently processing entry as complete.
+		"""
 		in_progress = false
 
 	be _dispatch() =>
-        """
-        Attempt to drain the queue by calling the callback and
-        waiting for the promise to be completed.
-        """
+		"""
+		Attempt to drain the queue by calling the callback and
+		waiting for the promise to be completed.
+		"""
 		if in_progress then return end
 		if queue.size() > 0 then
 			in_progress = true
